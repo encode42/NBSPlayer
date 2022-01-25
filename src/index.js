@@ -192,7 +192,7 @@ async function fetchURL(link) {
         url = new URL(link);
 
         // Load the URL contents
-        const response = await fetch(`https://thingproxy.freeboard.io/fetch/${url}`);
+        const response = await fetch(url);
         if (response.ok) {
             loadSong(url, await response.arrayBuffer());
         }
