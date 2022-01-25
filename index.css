@@ -1,0 +1,49 @@
+html {
+    overflow-y: hidden;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: unset;
+    height: 100vh;
+    margin: unset;
+}
+
+main {
+    width: 500px;
+    padding: 10px;
+}
+
+input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+input[type="range"] {
+    background: var(--background);
+    padding: 10px;
+}
+
+input[type="range"]::-moz-range-track, input[type="range"]::-webkit-slider-runnable-track {
+    background: var(--button-base);
+}
+
+#playback-button::before {
+    content: "play_arrow";
+}
+
+#playback-button[data-toggled="true"]::before {
+    content: "pause";
+}
+
+.buttons-with-settings {
+    display: flex;
+    align-items: stretch;
+}
+
+.buttons-with-settings .settings {
+    display: flex;
+    flex-direction: column;
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>NBSPlayer</title>
+        <meta name="description" content="A simple `.nbs` file player for your browser.">
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.min.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="index.css">
+    </head>
+    <body>
+        <main>
+            <input type="file" id="file-input" accept=".nbs">
+
+            <input type="range" id="progress-bar" step="0.1" value="0" disabled>
+            <div class="buttons-with-settings">
+                <button id="playback-button" class="material-icons" title="playback" disabled></button>
+                <button id="reset-button" class="material-icons" disabled>replay</button>
+                <div class="settings">
+                    <label><input type="checkbox" id="looping-check" disabled> Looping</label>
+                    <label><input type="checkbox" id="parity-check" checked disabled> Parity</label>
+                </div>
+            </div>
+
+        </main>
+
+        <script async src="./src/index.js" type="module"></script>
+    </body>
+</html>

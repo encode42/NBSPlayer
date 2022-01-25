@@ -1,0 +1,8 @@
+{
+    "private": {
+        "target": "../private",
+        "excludeFiles": [
+            "src/NBS.js"
+        ]
+    }
+}

@@ -1,0 +1,58 @@
+name: Build
+on:
+  push:
+    branches:
+    - "main"
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: "17"
+        cache: "yarn"
+
+#    - name: Commit files
+#      run: |
+#        git config --local user.email "action@github.com"
+#        git config --local user.name "GitHub Action"
+#        git add dist/* -f # build/*
+#        git commit -m "Push build changes" || echo "No changes were found."
+#
+#    - name: Push changes
+#      uses: ad-m/github-push-action@master
+#      with:
+#        github_token: ${{ secrets.GITHUB_TOKEN }}
+#        branch: ${{ github.ref }}
+
+    - name: Prepare deploy pages
+      run: |
+        BASE=".github/tuottaa/private/"
+        mkdir "$BASE"
+        
+        cp index.html "$BASE"
+        cp index.css "$BASE"
+        cp -r src "$BASE"
+        cp -r assets "$BASE"
+
+    - name: Build pages
+      working-directory: .github/tuottaa
+      run: |
+        git clone https://github.com/QuantumSuite/Tuottaa
+        cd Tuottaa
+        yarn install
+        node src/index.js --config ../config.json
+
+    - name: Deploy pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: .github/tuottaa/Tuottaa/public
+        publish_branch: gh-pages
+        user_name: GitHub Action
+        user_email: action@github.com
