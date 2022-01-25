@@ -19,8 +19,8 @@ export function resetElements() {
                 element.value = null;
             }
 
-            // Ranges
-            if (type === "range") {
+            // Ranges, text inputs
+            if (type === "range" || type === "text" || type === "url") {
                 element.value = element.getAttribute("value");
             }
 

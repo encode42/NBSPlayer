@@ -3,6 +3,51 @@ import { load, init } from "./audio/load.js";
 import { resetElements } from "./util/util.js";
 
 /**
+ * URL query parameters.
+ *
+ * @type {URLSearchParams}
+ * @private
+ */
+const params = new URLSearchParams(window.location.search);
+
+/**
+ * File / URL selection toggle.
+ *
+ * @type {HTMLAnchorElement}
+ * @private
+ */
+let selectToggle;
+
+/**
+ * File selection.
+ *
+ * @type {HTMLInputElement}
+ * @private
+ */
+let fileSelect;
+
+/**
+ * URL selection parent div.
+ *
+ * @type {HTMLDivElement}
+ * @private
+ */
+let urlSelectParent;
+
+/**
+ * URL selection.
+ *
+ * @type {HTMLInputElement}
+ * @private
+ */
+let urlSelect;
+
+/**
+ * URL selection load button.
+ */
+let urlSelectLoad;
+
+/**
  * The playback button.
  *
  * @type {HTMLButtonElement}
@@ -51,9 +96,12 @@ let parityCheck;
 let currentPlayer;
 
 window.addEventListener("load", async () => {
-    const fileSelect = document.getElementById("file-input");
+    selectToggle = document.getElementById("select-toggle");
+    fileSelect = document.getElementById("file-select");
+    urlSelectParent = document.getElementById("url-select-parent");
+    urlSelect = document.getElementById("url-select");
+    urlSelectLoad = document.getElementById("url-select-load");
     progressBar = document.getElementById("progress-bar");
-
     playbackButton = document.getElementById("playback-button");
     resetButton = document.getElementById("reset-button");
     loopingCheck = document.getElementById("looping-check");
@@ -63,32 +111,42 @@ window.addEventListener("load", async () => {
     resetElements();
     await init();
 
+    // Check if a url is provided
+    const queryURL = params.get("url");
+    if (queryURL) {
+        setUseURL(true);
+
+        urlSelect.value = queryURL;
+        fetchURL(queryURL);
+    }
+
+    // File / URL selection toggle is clicked
+    selectToggle.addEventListener("click", () => {
+        setUseURL(selectToggle.dataset.toggled !== "true");
+
+        setReady(false);
+        currentPlayer?.reset();
+    });
+
+    // URL load button is clicked
+    urlSelectLoad.addEventListener("click", async () => {
+        const url = urlSelect.value;
+
+        // Set the URL parameter
+        params.set("url", url);
+        window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+
+        // Fetch the URL
+        fetchURL(url);
+    });
+
     // File input change event
-    fileSelect.addEventListener("change", async event => {
-        if (event.target.files.length === 0) {
+    fileSelect.addEventListener("change", async () => {
+        if (fileSelect.files.length === 0) {
             return;
         }
 
-        // Stop all playing songs
-        await Player.stopAll();
-        setPlaying(false);
-
-        // Load the song and create the player
-        const song = await load(event.target.files[0]);
-        currentPlayer = new Player(song);
-        currentPlayer.checkLooping();
-
-        // Add the end song event listener
-        if (!currentPlayer.hasEndListener) {
-            currentPlayer.addEventListener("end", () => {
-                setPlaying(false);
-            });
-
-            currentPlayer.hasEndListener = true;
-        }
-
-        setReady(true);
-        // setPlaying(true); // Uncomment for testing
+        loadSong(fileSelect.files[0].name, await fileSelect.files[0].arrayBuffer());
     });
 
     // Play / pause button is clicked
@@ -121,6 +179,58 @@ window.addEventListener("load", async () => {
 });
 
 /**
+ * Fetch a song from a URL.
+ *
+ * @param {string} link Link to fetch from
+ * @return {Promise<void>}
+ * @private
+ */
+async function fetchURL(link) {
+    let url;
+
+    try {
+        url = new URL(link);
+
+        // Load the URL contents
+        const response = await fetch(`https://thingproxy.freeboard.io/fetch/${url}`);
+        if (response.ok) {
+            loadSong(url, await response.arrayBuffer());
+        }
+    } catch {}
+}
+
+/**
+ * Load a song from an ArrayBuffer.
+ *
+ * @param {string} filename Name of the file used in cache
+ * @param {ArrayBuffer} arrayBuffer ArrayBuffer to load from
+ * @return {Promise<void>}
+ * @private
+ */
+async function loadSong(filename, arrayBuffer) {
+    // Stop all playing songs
+    await Player.stopAll();
+    setPlaying(false);
+
+    // Load the song and create the player
+    const song = await load(filename, arrayBuffer);
+    currentPlayer = new Player(song);
+    currentPlayer.checkLooping();
+
+    // Add the end song event listener
+    if (!currentPlayer.hasEndListener) {
+        currentPlayer.addEventListener("end", () => {
+            setPlaying(false);
+        });
+
+        currentPlayer.hasEndListener = true;
+    }
+
+    setReady(true);
+    // setPlaying(true); // Uncomment for testing
+}
+
+/**
  * @param {boolean} ready Whether the app is ready.
  * @return {void}
  * @private
@@ -137,6 +247,25 @@ function setReady(ready) {
         progressBar.disabled = true;
         loopingCheck.disabled = true;
         parityCheck.disabled = true;
+    }
+}
+
+/**
+ * @param {boolean} useURL Whether to load from URLs.
+ * @return {void}
+ * @private
+ */
+function setUseURL(useURL) {
+    if (useURL) {
+        selectToggle.dataset.toggled = "true";
+        fileSelect.classList.add("invisible");
+        urlSelect.value = null;
+        urlSelectParent.classList.add("visible");
+    } else {
+        delete selectToggle.dataset.toggled;
+        fileSelect.classList.remove("invisible");
+        urlSelectParent.classList.remove("visible");
+        fileSelect.value = null;
     }
 }
 

@@ -22,18 +22,19 @@ export async function init() {
  * Load a song from a File.
  * This method uses a cache to store loaded songs and instruments.
  *
- * @param {File} file File to load from
+ * @param {string} filename Name of the file
+ * @param {ArrayBuffer} arraybuffer ArrayBuffer to load from
  * @return {Promise<NBSjs.Song>}
  */
-export async function load(file) {
+export async function load(filename, arraybuffer) {
     // Check if the song is already loaded
-    const loadedSong = songCache.get(file.name);
+    const loadedSong = songCache.get(filename);
     if (loadedSong) {
         return loadedSong;
     }
 
     // Load the song
-    const song = NBSjs.Song.fromArrayBuffer(await file.arrayBuffer());
+    const song = NBSjs.Song.fromArrayBuffer(arraybuffer);
 
     // Correct built-in custom instruments
     for (const instrument of song.instruments) {
@@ -43,6 +44,6 @@ export async function load(file) {
         }
     }
 
-    songCache.set(file.name, song);
+    songCache.set(filename, song);
     return song;
 }

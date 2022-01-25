@@ -34,6 +34,26 @@ input[type="range"]::-moz-range-track, input[type="range"]::-webkit-slider-runna
     background: var(--button-base);
 }
 
+#select-toggle::before {
+    content: "url";
+}
+
+#select-toggle[data-toggled="true"]::before {
+    content: "file";
+}
+
+#file-select.invisible {
+    display: none;
+}
+
+#url-select-parent {
+    display: none;
+}
+
+#url-select-parent.visible {
+    display: flex;
+}
+
 #playback-button::before {
     content: "play_arrow";
 }
@@ -42,8 +62,14 @@ input[type="range"]::-moz-range-track, input[type="range"]::-webkit-slider-runna
     content: "pause";
 }
 
-.material-icons {
-    color: var(--text-muted);
+.fancy-link {
+    font-size: 0.8em;
+    font-family: "JetBrains Mono", Consolas, serif;
+    text-decoration: underline;
+}
+
+.input-with-button {
+    display: flex;
 }
 
 .buttons-with-settings {
@@ -54,4 +80,15 @@ input[type="range"]::-moz-range-track, input[type="range"]::-webkit-slider-runna
 .buttons-with-settings .settings {
     display: flex;
     flex-direction: column;
+}
+
+.material-icons {
+    color: var(--text-muted);
+}
+
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@2.242/fonts/webfonts/JetBrainsMono-Regular.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
 }
