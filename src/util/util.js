@@ -1,0 +1,1 @@
+function resetElements(){for(const t of document.getElementsByTagName("*")){var e;""===t.getAttribute("disabled")&&(t.disabled=!0),"INPUT"===t.nodeName&&("file"===(e=t.getAttribute("type"))&&(t.value=null),"range"===e&&(t.value=t.getAttribute("value")),"checkbox"===e&&""===t.getAttribute("checked")&&(t.checked=!0))}}export{resetElements};
