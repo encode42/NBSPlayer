@@ -11,6 +11,14 @@ import { resetElements } from "./util/util.js";
 const params = new URLSearchParams(window.location.search);
 
 /**
+ * URL string provided in the query.
+ *
+ * @type {string}
+ * @private
+ */
+const queryURL = params.get("url");
+
+/**
  * File / URL selection toggle.
  *
  * @type {HTMLAnchorElement}
@@ -108,17 +116,20 @@ window.addEventListener("load", async () => {
     parityCheck = document.getElementById("parity-check");
 
     setReady(false);
-    resetElements();
-    await init();
 
     // Check if a url is provided
-    const queryURL = params.get("url");
     if (queryURL) {
         setUseURL(true);
 
+        urlSelect.dataset.ignore = "true";
         urlSelect.value = queryURL;
         fetchURL(queryURL);
     }
+
+    resetElements();
+    delete urlSelect.dataset.ignore;
+
+    await init();
 
     // File / URL selection toggle is clicked
     selectToggle.addEventListener("click", () => {
@@ -132,12 +143,12 @@ window.addEventListener("load", async () => {
     urlSelectLoad.addEventListener("click", async () => {
         const url = urlSelect.value;
 
+        // Fetch the URL
+        await fetchURL(url);
+
         // Set the URL parameter
         params.set("url", url);
         window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
-
-        // Fetch the URL
-        fetchURL(url);
     });
 
     // File input change event
@@ -192,10 +203,14 @@ async function fetchURL(link) {
         url = new URL(link);
 
         // Load the URL contents
+        urlSelectLoad.dataset.loading = "true";
+
         const response = await fetch(url);
         if (response.ok) {
             loadSong(url, await response.arrayBuffer());
         }
+
+        delete urlSelectLoad.dataset.loading;
     } catch {}
 }
 

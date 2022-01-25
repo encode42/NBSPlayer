@@ -5,6 +5,10 @@
  */
 export function resetElements() {
     for (const element of document.getElementsByTagName("*")) {
+        if (element.dataset.ignore === "true") {
+            continue;
+        }
+
         // Disabled
         if (element.getAttribute("disabled") === "") {
             element.disabled = true;

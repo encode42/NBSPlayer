@@ -54,6 +54,14 @@ input[type="range"]::-moz-range-track, input[type="range"]::-webkit-slider-runna
     display: flex;
 }
 
+#url-select-load::before {
+    content: "Load";
+}
+
+#url-select-load[data-loading="true"]::before {
+    content: "Loading";
+}
+
 #playback-button::before {
     content: "play_arrow";
 }
