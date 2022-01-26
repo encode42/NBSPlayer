@@ -10,6 +10,9 @@ import Playlist from "./playlist/Playlist.js";
 // - lastTick = last measure
 // - Support Tempo Changer instrument
 
+// Potential bug:
+// Portal is XP orb in playlist
+
 /**
  * URL query parameters.
  *
@@ -99,7 +102,7 @@ let playlist;
  *
  * @type {HTMLUListElement}
  */
-const playlistOrder = document.getElementById("playlist-order");
+let playlistOrder;
 
 /**
  * The playback button.
@@ -143,6 +146,8 @@ let loopingCheck;
  */
 let parityCheck;
 
+let noSleep;
+
 window.addEventListener("load", async () => {
     selectToggle = document.getElementById("select-toggle");
     exportButton = document.getElementById("export");
@@ -153,6 +158,7 @@ window.addEventListener("load", async () => {
     urlSelect = document.getElementById("url-select");
     urlSelectLoad = document.getElementById("url-select-load");
     progressBar = document.getElementById("progress-bar");
+    playlistOrder = document.getElementById("playlist-order");
     playbackButton = document.getElementById("playback-button");
     resetButton = document.getElementById("reset-button");
     repeatButton = document.getElementById("repeat-button");
@@ -181,6 +187,8 @@ window.addEventListener("load", async () => {
     resetElements();
     updateVersion();
     delete urlSelect.dataset.ignore;
+
+    noSleep = new NoSleep();
 
     // File / URL selection toggle is clicked
     selectToggle.addEventListener("click", () => {
@@ -471,9 +479,11 @@ function setPlaying(playing) {
     if (playing) {
         playlist.currentPlayer?.play();
         playbackButton.dataset.toggled = "true";
+        noSleep.enable();
     } else {
         playlist.currentPlayer?.pause();
         delete playbackButton.dataset.toggled;
+        noSleep.disable();
     }
 }
 
