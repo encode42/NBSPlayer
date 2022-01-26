@@ -320,7 +320,7 @@ async function fetchURL(link) {
  * @param {boolean} [addPlaying] Whether to set latest song to playing
  * @return {Promise<void>}
  */
-async function loadSongs(songs, addPlaying) {
+async function loadSongs(songs, addPlaying = true) {
     await playlist.resetAll();
     setPlaying(false);
 
