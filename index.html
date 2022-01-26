@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>NBSPlayer</title>
-        <meta name="description" content="A simple `.nbs` file player for your browser.">
+        <meta name="description" content="A simple .nbs file player for your browser.">
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.min.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -13,24 +13,43 @@
     </head>
     <body>
         <main>
-            <a href="#" id="select-toggle" class="fancy-link"></a>
-            <input type="file" id="file-select" accept=".nbs">
-            <div id="url-select-parent" class="input-with-button">
-                <input type="url" id="url-select" placeholder="Insert url">
-                <button id="url-select-load"></button>
-            </div>
+            <section id="playlist">
+                <section class="inline-divs">
+                    <a href="#" id="select-toggle" class="fancy-link"></a>
+                    <div>
+                        <a href="#" id="export" class="fancy-link">export</a> <a href="#" id="import" class="fancy-link">import</a>
+                        <input type="file" id="import-select" accept="application/json">
+                    </div>
+                </section>
+                <div class="input-with-button">
+                    <input type="file" id="file-select" accept=".nbs" multiple>
+                    <div id="url-select-parent">
+                        <input type="url" id="url-select" placeholder="Insert url">
+                        <button id="url-select-load">Add</button>
+                    </div>
+                </div>
+
+                <ul id="playlist-order"></ul>
+            </section>
 
             <input type="range" id="progress-bar" step="0.1" value="0" disabled>
             <div class="buttons-with-settings">
                 <button id="playback-button" class="material-icons" title="playback" disabled></button>
                 <button id="reset-button" class="material-icons" disabled>replay</button>
+                <button id="repeat-button" class="material-icons" disabled></button>
                 <div class="settings">
                     <label><input type="checkbox" id="looping-check" disabled> Looping</label>
                     <label><input type="checkbox" id="parity-check" checked disabled> Parity</label>
                 </div>
             </div>
-
         </main>
+
+        <footer>
+            <div class="paragraph-separator">
+                <p class="fancy-text">NBSPlayer <a href="https://github.com/Encode42/NBSPlayer">source</a></p>
+                <p class="fancy-text">powered by <a href="https://github.com/Encode42/NBS.js">NBS.js <span id="version">1.0.0</span></a></p>
+            </div>
+        </footer>
 
         <script async src="./src/index.js" type="module"></script>
     </body>

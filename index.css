@@ -16,6 +16,13 @@ main {
     padding: 10px;
 }
 
+footer {
+    position: fixed;
+    bottom: 0;
+    height: min-content;
+    border-top: none;
+}
+
 input {
     width: 100%;
     box-sizing: border-box;
@@ -42,24 +49,75 @@ input[type="range"]::-moz-range-track, input[type="range"]::-webkit-slider-runna
     content: "file";
 }
 
+#import-select {
+    display: none;
+}
+
+#file-select {
+    background: var(--button-base);
+    margin-right: 0;
+}
+
 #file-select.invisible {
     display: none;
 }
 
 #url-select-parent {
     display: none;
+    width: 100%;
 }
 
 #url-select-parent.visible {
     display: flex;
 }
 
-#url-select-load::before {
-    content: "Load";
+#url-select {
+    background: var(--button-base);
+    margin-right: 6px;
 }
 
-#url-select-load[data-loading="true"]::before {
-    content: "Loading";
+#url-select-load {
+    margin-right: 0;
+}
+
+#playlist {
+    max-height: 315px;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    background: var(--background);
+}
+
+#playlist::-webkit-scrollbar {
+    display: none;
+}
+
+#playlist ul {
+    padding: 0;
+    margin-bottom: 2px;
+}
+
+#playlist ul > li:not(:last-child) {
+    margin-bottom: 10px;
+}
+
+#playlist li {
+    padding: 10px;
+    border-radius: 5px;
+    background: var(--button-base);
+    list-style: none;
+    transition: background var(--animation-duration) linear;
+    user-select: none;
+    cursor: pointer;
+}
+
+#playlist li:hover {
+    background: var(--button-hover);
+}
+
+#playlist li.playing {
+    background: var(--button-hover);
 }
 
 #playback-button::before {
@@ -70,14 +128,36 @@ input[type="range"]::-moz-range-track, input[type="range"]::-webkit-slider-runna
     content: "pause";
 }
 
-.fancy-link {
-    font-size: 0.8em;
-    font-family: "JetBrains Mono", Consolas, serif;
-    text-decoration: underline;
+#repeat-button::before {
+    content: "repeat";
+}
+
+#repeat-button[data-status="one"]::before {
+    content: "repeat_one";
+}
+
+#repeat-button[data-status="playlist"]::before {
+    content: "repeat_on";
+}
+
+.inline-divs {
+    display: inline-block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 6px;
+}
+
+.inline-divs > :last-child {
+    float: right;
 }
 
 .input-with-button {
     display: flex;
+    height: 50px;
+}
+
+.input-with-button input, .input-with-button button {
+    height: 100%;
 }
 
 .buttons-with-settings {
@@ -88,6 +168,30 @@ input[type="range"]::-moz-range-track, input[type="range"]::-webkit-slider-runna
 .buttons-with-settings .settings {
     display: flex;
     flex-direction: column;
+}
+
+.paragraph-separator {
+    display: inline-block;
+}
+
+.paragraph-separator p {
+    display: inline-block;
+    padding-left: 10px;
+    padding-right: 10px;
+    float: left;
+}
+
+.paragraph-separator p:not(:last-child) {
+    border-right: 1px solid var(--text-muted);
+}
+
+.fancy-text, .fancy-link {
+    font-size: 0.8em;
+    font-family: "JetBrains Mono", Consolas, serif;
+}
+
+.fancy-text a, .fancy-link {
+    text-decoration: underline;
 }
 
 .material-icons {

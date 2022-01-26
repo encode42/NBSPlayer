@@ -26,6 +26,9 @@ export function playNote(key, instrument, velocity, panning, pitch) {
     source.playbackRate.value = 2 ** ((key + (pitch / 100) - 45) / 12);
 
     // Process gain
+    // Issue: Playback gets jank when a massive amount of notes is being played
+    // Solution: Dynamically adjust volume
+    // This could be a pre-determined algorithm to offset the song's volume
     const gainNode = audioContext.createGain();
     gainNode.gain.value = (velocity / 2) / 100; // Decrease volume to avoid peaking
     source.connect(gainNode);

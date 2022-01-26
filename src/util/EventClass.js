@@ -1,7 +1,7 @@
 /**
  * Represents a class that can emit events.
  */
-export class EventClass {
+export default class EventClass {
     /**
      * Listeners that are attached to the class.
      *

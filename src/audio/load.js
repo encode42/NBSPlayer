@@ -1,8 +1,7 @@
-import { PlayerInstrument } from "../player/PlayerInstrument.js";
+import PlayerInstrument from "../player/PlayerInstrument.js";
 NBSjs.setInstrumentClass(PlayerInstrument);
 
 let initialized = false;
-const songCache = new Map();
 
 /**
  * Initialize all built-in instruments.
@@ -20,19 +19,11 @@ export async function init() {
 
 /**
  * Load a song from a File.
- * This method uses a cache to store loaded songs and instruments.
  *
- * @param {string} filename Name of the file
  * @param {ArrayBuffer} arraybuffer ArrayBuffer to load from
  * @return {Promise<NBSjs.Song>}
  */
-export async function load(filename, arraybuffer) {
-    // Check if the song is already loaded
-    const loadedSong = songCache.get(filename);
-    if (loadedSong) {
-        return loadedSong;
-    }
-
+export async function load(arraybuffer) {
     // Load the song
     const song = NBSjs.Song.fromArrayBuffer(arraybuffer);
 
@@ -44,6 +35,5 @@ export async function load(filename, arraybuffer) {
         }
     }
 
-    songCache.set(filename, song);
     return song;
 }

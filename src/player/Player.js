@@ -1,15 +1,11 @@
+import { wait } from "../util/util.js";
 import { playNote } from "../audio/audio.js";
-import { EventClass } from "../util/EventClass.js";
-
-// TODO:
-// - Instrument key offsets
-// - lastTick = last measure
+import EventClass from "../util/EventClass.js";
 
 /**
  * The progress bar.
  *
  * @type {HTMLInputElement}
- * @private
  */
 const progressBar = document.getElementById("progress-bar");
 
@@ -17,7 +13,6 @@ const progressBar = document.getElementById("progress-bar");
  * The looping checkbox.
  *
  * @type {HTMLInputElement}
- * @private
  */
 const loopingCheck = document.getElementById("looping-check");
 
@@ -25,21 +20,20 @@ const loopingCheck = document.getElementById("looping-check");
  * The last progressBar value.
  *
  * @type {number}
- * @private
  */
 let lastProgress = 0;
 
 /**
- * The currently loaded Note Block players.
- *
- * @type {Map<string, Player>}
- */
-const loadedPlayers = new Map();
-
-/**
  * Represents a Note Block player.
  */
-export class Player extends EventClass {
+export default class Player extends EventClass {
+    /**
+     * The name of the player.
+     *
+     * @type {string}
+     */
+    name;
+
     /**
      * Amount of milliseconds between each tick.
      *
@@ -110,13 +104,6 @@ export class Player extends EventClass {
     updateProgress = true;
 
     /**
-     * Whether the player already has an attacked end event listener.
-     *
-     * @type {boolean}
-     */
-    hasEndListener = false;
-
-    /**
      * Whether the song should loop if available.
      *
      * @type {boolean}
@@ -155,19 +142,26 @@ export class Player extends EventClass {
     useParity = true;
 
     /**
+     * The song's playlist element.
+     *
+     * @type {HTMLLIElement}
+     */
+    element;
+
+    /**
+     * The song's associated ArrayBuffer.
+     *
+     * @type {ArrayBuffer}
+     */
+    arrayBuffer;
+
+    /**
      * Create a Note Block player.
      *
      * @param {NBSjs.Song} song Song to play
      */
     constructor(song) {
         super();
-
-        // Check if the player is already loaded
-        const loadedPlayer = loadedPlayers.get(song.name || song.size);
-        if (loadedPlayer) {
-            loadedPlayer.checkProgressBar();
-            return loadedPlayer;
-        }
 
         // Load the player
         this.hasSolo = song.hasSolo;
@@ -178,7 +172,6 @@ export class Player extends EventClass {
         this.loop = song.loopEnabled;
         this.maxLoopCount = song.maxLoopCount;
         this.loopStartTick = song.loopStartTick;
-        this.checkLooping();
 
         // Process all layers that will be played back
         // This creates an object containing all solo or non-locked layers
@@ -199,24 +192,36 @@ export class Player extends EventClass {
             this.layers[this.audibleLayers] = layer;
             this.audibleLayers++;
         }
-
-        loadedPlayers.set(song.name || song.size, this);
     }
 
     /**
      * Check the looping checkbox if required.
      *
+     * @param {number} loadedSongs Amount of loaded songs in the playlist
      * @return {void}
-     * @private
      */
-    checkLooping() {
-        loopingCheck.checked = this.loop;
-        loopingCheck.disabled = !this.loop;
+    checkLooping(loadedSongs) {
+        if (loadedSongs) {
+            this.loop = false;
+            loopingCheck.checked = false;
+            loopingCheck.disabled = true;
+        } else {
+            loopingCheck.checked = this.loop;
+            loopingCheck.disabled = !this.loop;
+        }
     }
 
+    /**
+     * Update the progressbar if required.
+     *
+     * @return {void}
+     */
     checkProgressBar() {
         if (this.updateProgress) {
+            // Round the current tick percentage to the nearest tenth
             const progress = Math.round(((this.currentTick / this.lastTick) * 100) * 10) / 10;
+
+            // Update if required
             if (progress !== lastProgress) {
                 lastProgress = progress;
                 progressBar.value = progress;
@@ -274,7 +279,7 @@ export class Player extends EventClass {
         }
 
         // Wait until next tick
-        await new Promise(resolve => setTimeout(resolve, this.timePerTick));
+        await wait(this.timePerTick);
         this.currentTick++;
 
         this.checkProgressBar();
@@ -311,19 +316,6 @@ export class Player extends EventClass {
         await this.pause();
         this.currentTick = -1;
         this.currentLoopCount = 0;
-        progressBar.value = 0;
-    }
-
-    /**
-     * Stop all currently loaded players.
-     *
-     * @return {void}
-     */
-    static async stopAll() {
-        for (const player of loadedPlayers.values()) {
-            await player.pause();
-        }
-
         progressBar.value = 0;
     }
 }

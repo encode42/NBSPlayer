@@ -5,7 +5,7 @@ import { decodeAudioData } from "../audio/audio.js";
 /**
  * Represents an instrument of a Note.
  */
-export class PlayerInstrument extends NBSjs.Instrument {
+export default class PlayerInstrument extends NBSjs.Instrument {
     /**
      * The resulting audio buffer that will contain the sound
      * Set by loadAudio() or load()
