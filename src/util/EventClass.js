@@ -1,1 +1,1 @@
-class EventClass{listeners=new Map;addEventListener(s,e){this.listeners.set(s,e)}emit(s,e={}){for(var[t,n]of this.listeners)t===s&&n(e)}}export{EventClass};
+export default class EventClass{listeners=new Map;addEventListener(e,s){this.listeners.set(e,s)}emit(e,s={}){for(var[t,i]of this.listeners)t===e&&i(s)}}
