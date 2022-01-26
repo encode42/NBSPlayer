@@ -49,6 +49,14 @@ input[type="range"]::-moz-range-track, input[type="range"]::-webkit-slider-runna
     content: "file";
 }
 
+#import::before {
+    content: "import";
+}
+
+#import[data-url="true"]::before {
+    content: "import from url";
+}
+
 #import-select {
     display: none;
 }

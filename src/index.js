@@ -25,6 +25,13 @@ const params = new URLSearchParams(window.location.search);
 const queryURL = params.get("url");
 
 /**
+ * Import string provided in the query.
+ *
+ * @type {string}
+ */
+let queryImport = params.get("import");
+
+/**
  * File / URL selection toggle.
  *
  * @type {HTMLAnchorElement}
@@ -156,12 +163,19 @@ window.addEventListener("load", async () => {
     setReady(false);
 
     // Check if a URL is provided
-    if (queryURL) {
+    if (queryURL || queryImport) {
         setUseURL(true);
 
         urlSelect.dataset.ignore = "true";
         urlSelect.value = queryURL;
-        fetchURL(queryURL);
+
+        if (queryImport) {
+            // Load playlist
+            fetchImport(queryImport);
+        } else {
+            // Load song
+            loadURL(queryURL);
+        }
     }
 
     resetElements();
@@ -179,8 +193,19 @@ window.addEventListener("load", async () => {
     });
 
     // Playlist import button is clicked
-    importButton.addEventListener("click", () => {
-        importSelect.click();
+    importButton.addEventListener("click", async () => {
+        if (!importButton.dataset.url) {
+            importSelect.click();
+        } else {
+            const url = window.prompt("Insert url");
+
+            queryImport = url;
+            params.delete("url");
+            params.set("import", url);
+            updateHistory();
+
+            fetchImport(url);
+        }
     });
 
     // Hidden playlist import file input
@@ -191,15 +216,7 @@ window.addEventListener("load", async () => {
 
         // Load the uploaded JSON file
         const file = await importSelect.files[0].text();
-        const json = JSON.parse(file);
-
-        // Load the playlist and songs
-        const result = await playlist.import(json);
-        setRepeat(result.repeatMode);
-
-        await loadSongs(result.songs, false);
-        const name = playlistOrder.children[result.playing].innerHTML;
-        playlist.switchTo(name);
+        loadImport(file);
     });
 
     // Playlist entry is clicked.
@@ -217,12 +234,13 @@ window.addEventListener("load", async () => {
     urlSelectLoad.addEventListener("click", async () => {
         const url = urlSelect.value;
 
-        // Fetch the URL
-        await fetchURL(url);
-
         // Set the URL parameter
-        params.set("url", url);
-        window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+        if (!queryImport) {
+            params.set("url", url);
+            updateHistory();
+        }
+
+        loadURL(url);
     });
 
     // File input change event
@@ -299,18 +317,66 @@ window.addEventListener("load", async () => {
  */
 async function fetchURL(link) {
     let url;
+    let result;
 
     try {
         url = new URL(link);
 
         const response = await fetch(url);
         if (response.ok) {
-            loadSongs([{
-                "name": url.toString(),
-                "buffer": await response.arrayBuffer()
-            }]);
+            result = response;
         }
     } catch {}
+
+    return result;
+}
+
+/**
+ * Load a song from a URL.
+ *
+ * @param {string} link URL to load from
+ * @return {Promise<void>}
+ */
+async function loadURL(link) {
+    const result = await fetchURL(link);
+
+    if (result) {
+        loadSongs([{
+            "name": link,
+            "buffer": await result.arrayBuffer()
+        }]);
+    }
+}
+
+/**
+ * Fetch a playlist file from a URL.
+ *
+ * @param {URL} link URL to load from
+ * @return {Promise<void>}
+ */
+async function fetchImport(link) {
+    const result = await fetchURL(link);
+    const json = await result.text();
+
+    loadImport(json);
+}
+
+/**
+ * Load an imported playlist file.
+ *
+ * @param {string} file File to load
+ * @return {Promise<void>}
+ */
+async function loadImport(file) {
+    const json = JSON.parse(file);
+
+    // Load the playlist and songs
+    const result = await playlist.import(json);
+    setRepeat(result.repeatMode);
+
+    await loadSongs(result.songs, false);
+    const name = playlistOrder.children[result.playing].innerHTML;
+    playlist.switchTo(name);
 }
 
 /**
@@ -378,19 +444,22 @@ function setUseURL(useURL) {
     if (useURL) {
         // Show the URL selection
         selectToggle.dataset.toggled = "true";
+        importButton.dataset.url = "true";
         fileSelect.classList.add("invisible");
         urlSelect.value = null;
         urlSelectParent.classList.add("visible");
     } else {
         // Show the file selection
         delete selectToggle.dataset.toggled;
+        delete importButton.dataset.url;
         fileSelect.classList.remove("invisible");
         urlSelectParent.classList.remove("visible");
         fileSelect.value = null;
 
         // Remove the URL parameter
         params.delete("url");
-        window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+        params.delete("import");
+        updateHistory();
     }
 }
 
@@ -429,4 +498,13 @@ function setRepeat(repeat) {
             repeatButton.dataset.status = "playlist";
             break;
     }
+}
+
+/**
+ * Update the browser's history.
+ *
+ * @return {void}
+ */
+function updateHistory() {
+    window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
 }
