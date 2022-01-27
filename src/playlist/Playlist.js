@@ -236,6 +236,7 @@ export default class Playlist extends EventClass {
      * @return {Promise<void>}
      */
     async export() {
+        // Create the zip writer
         const zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), {
             "level": 9,
             "extendedTimestamp": false
@@ -250,16 +251,19 @@ export default class Playlist extends EventClass {
             const entry = playlistOrder.children[i];
             const loadedPlayer = this.loadedPlayers.get(decodeHTML(entry.innerHTML));
 
+            // Add song to the zip
             await zipWriter.add(`songs/${loadedPlayer.name}`, new zip.Uint8ArrayReader(new Uint8Array(loadedPlayer.arrayBuffer)));
 
+            // Currently playing index
             if (entry.classList.contains("playing")) {
                 data.playing = i;
             }
         }
 
+        // Add datafile to zip
         await zipWriter.add("data", new zip.TextReader(JSON.stringify(data)));
 
-        // Prepare the results for downloading
+        // Prepare the zip for downloading
         const url = URL.createObjectURL(await zipWriter.close());
 
         const link = document.createElement("a");
@@ -275,9 +279,10 @@ export default class Playlist extends EventClass {
      * Import a playlist from a JSON file.
      *
      * @param {Object} blob Blob to import.
-     * @return {Promise<{repeatMode: number, songs: {name: string, buffer: ArrayBuffer}[], playing: number}>}
+     * @return {Promise<{repeatMode: number, playing: number, files: {name: string, buffer: ArrayBuffer}[]}>}
      */
     async import(blob) {
+        // Read the zip file
         const blobReader = new zip.BlobReader(blob);
         const zipReader = new zip.ZipReader(blobReader);
         const entries = await zipReader.getEntries();
@@ -285,11 +290,15 @@ export default class Playlist extends EventClass {
         const data = {
             "files": []
         };
+
+        // Iterate each zipped file
         for (const entry of entries) {
             if (entry.filename === "data") {
+                // Parse the datafile
                 const json = JSON.parse(await entry.getData(new zip.TextWriter()));
                 Object.assign(data, json);
             } else if (entry.filename.startsWith("songs")) {
+                // Extract the song
                 const binary = await entry.getData(new zip.Uint8ArrayWriter());
                 data.files.unshift({
                     "name": entry.filename.replace(/^songs\//, ""),
