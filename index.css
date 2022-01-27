@@ -89,7 +89,7 @@ input[type="range"]::-moz-range-track, input[type="range"]::-webkit-slider-runna
 }
 
 #playlist {
-    max-height: 315px;
+    max-height: 420px;
     padding: 10px;
     border-radius: 5px;
     overflow-y: scroll;
