@@ -16,7 +16,13 @@ const progressBar = document.getElementById("progress-bar");
  * @type {HTMLUListElement}
  */
 const playlistOrder = document.getElementById("playlist-order");
-Sortable.create(playlistOrder);
+Sortable.create(playlistOrder, {
+    "delay": 250,
+    "delayOnTouchOnly": true,
+    "touchStartThreshold": 10,
+    "multiDrag": true,
+    "multiDragKey": "ctrl"
+});
 
 /**
  * Represents a Note Block player playlist.
@@ -95,10 +101,23 @@ export default class Playlist extends EventClass {
         const li = document.createElement("li");
         li.innerHTML = name;
 
+        const handle = document.createElement("span");
+        handle.innerHTML = "clear";
+        handle.classList.add("material-icons");
+        handle.classList.add("deletable");
+
+        handle.addEventListener("click", () => {
+            console.log("DELETE!!")
+        });
+
+        li.append(handle);
+
         // Play the clicked song
         li.addEventListener("click", async event => {
-            await this.switchTo(event.target.innerHTML);
-            this.emit("clickChange");
+            if (!event.ctrlKey) {
+                await this.switchTo(event.target.innerHTML);
+                this.emit("clickChange");
+            }
         });
 
         player.element = li;
@@ -181,7 +200,7 @@ export default class Playlist extends EventClass {
      * @return {Promise<void>}
      * @private
      */
-    async switchTo(name) {
+    async switchTo(name, isImport = false) {
         await this.pauseAll();
 
         for (const entry of playlistOrder.children) {
@@ -191,6 +210,29 @@ export default class Playlist extends EventClass {
                 break;
             }
         }
+
+        if (!isImport) {
+            this.emit("change");
+        }
+    }
+
+    /**
+     * Get the index of the currently playing player.
+     *
+     * @param {string} name Name of the entry
+     * @return {number}
+     */
+    getIndex(name) {
+        let i;
+
+        for (i = 0; i < playlistOrder.children.length; i++) {
+            const entry = playlistOrder.children[i];
+            if (entry.classList.contains("playing")) {
+                break;
+            }
+        }
+
+        return i;
     }
 
     /**
@@ -230,12 +272,7 @@ export default class Playlist extends EventClass {
         }
     }
 
-    /**
-     * Export the playlist to a JSON file.
-     *
-     * @return {Promise<void>}
-     */
-    async export() {
+    async save() {
         // Create the zip writer
         const zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), {
             "level": 9,
@@ -243,7 +280,8 @@ export default class Playlist extends EventClass {
         });
 
         const data = {
-            "repeatMode": this.repeatMode
+            "repeatMode": this.repeatMode,
+            "playing": this.getIndex(this.currentPlayer.element.innerHTML)
         };
 
         // Iterate each entry
@@ -253,18 +291,22 @@ export default class Playlist extends EventClass {
 
             // Add song to the zip
             await zipWriter.add(`songs/${loadedPlayer.name}`, new zip.Uint8ArrayReader(new Uint8Array(loadedPlayer.arrayBuffer)));
-
-            // Currently playing index
-            if (entry.classList.contains("playing")) {
-                data.playing = i;
-            }
         }
 
         // Add datafile to zip
         await zipWriter.add("data", new zip.TextReader(JSON.stringify(data)));
 
+        return await zipWriter.close();
+    }
+
+    /**
+     * Export the playlist to a JSON file.
+     *
+     * @return {Promise<void>}
+     */
+    async export() {
         // Prepare the zip for downloading
-        const url = URL.createObjectURL(await zipWriter.close());
+        const url = URL.createObjectURL(await this.save());
 
         const link = document.createElement("a");
         link.download = "playlist.zip";

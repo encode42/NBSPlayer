@@ -128,6 +128,11 @@ input[type="range"]::-moz-range-track, input[type="range"]::-webkit-slider-runna
     background: var(--button-hover);
 }
 
+#playlist li span.deletable {
+    float: right;
+    color: var(--background);
+}
+
 #playback-button::before {
     content: "play_arrow";
 }
@@ -200,6 +205,10 @@ input[type="range"]::-moz-range-track, input[type="range"]::-webkit-slider-runna
 
 .fancy-text a, .fancy-link {
     text-decoration: underline;
+}
+
+.sortable-selected {
+    box-shadow: 0 0 0 2px var(--focus);
 }
 
 .material-icons {

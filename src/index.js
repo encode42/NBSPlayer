@@ -1,5 +1,6 @@
 import { load, init } from "./audio/load.js";
 import { resetElements, updateVersion } from "./util/util.js";
+import Database from "./db/Database.js";
 import Playlist from "./playlist/Playlist.js";
 
 // TODO:
@@ -33,6 +34,8 @@ const queryURL = params.get("url");
  * @type {string}
  */
 let queryImport = params.get("import");
+
+const database = new Database("NBSPlayer", "playlist");
 
 /**
  * File / URL selection toggle.
@@ -182,6 +185,11 @@ window.addEventListener("load", async () => {
             // Load song
             loadURL(queryURL);
         }
+    } else {
+        const playing = await database.contains("playing");
+        const repeatMode = await database.contains("repeatMode");
+
+        loadStoredPlaylist(playing.result, repeatMode.result);
     }
 
     resetElements();
@@ -235,6 +243,10 @@ window.addEventListener("load", async () => {
     playlist.addEventListener("playlistEnd", () => {
         playlist.currentPlayer.pause();
         setPlaying(false);
+    });
+
+    playlist.addEventListener("change", async () => {
+        await database.put("playing", playlist.getIndex(playlist.currentPlayer.element.innerHTML));
     });
 
     // URL load button is clicked
@@ -372,29 +384,34 @@ async function fetchImport(link) {
  * Load an imported playlist file.
  *
  * @param {string} blob Blob to load
+ * @param {boolean} [updateStored] Whether to update the stored playlist.
  * @return {Promise<void>}
  */
-async function loadImport(blob) {
-    //const json = JSON.parse(file);
-
+async function loadImport(blob, updateStored = true, playingIndex, repeatMode) {
     // Load the playlist and songs
     const result = await playlist.import(blob);
 
-    setRepeat(result.repeatMode);
+    setRepeat(repeatMode !== undefined ? repeatMode : result.repeatMode);
 
-    await loadSongs(result.files, false);
-    const name = playlistOrder.children[result.playing].innerHTML;
-    playlist.switchTo(name);
+    await loadSongs(result.files, false, updateStored, true);
+
+    const currentElement = playlistOrder.children[playingIndex || result.playing];
+    playlist.switchTo(currentElement ? currentElement.innerHTML : playlistOrder.children[0].innerHTML, true);
+
+    if (playingIndex === undefined) {
+        database.put("playing", result.playing);
+    }
 }
 
 /**
  * Load an array of songs.
  *
  * @param {{name: string, buffer: ArrayBuffer}[]} songs Songs to load
- * @param {boolean} [addPlaying] Whether to set latest song to playing
+ * @param {boolean} [addPlaying=true] Whether to set latest song to playing
+ * @param {boolean} [updateStored=true] Whether to update the stored songs
  * @return {Promise<void>}
  */
-async function loadSongs(songs, addPlaying = true) {
+async function loadSongs(songs, addPlaying = true, updateStored = true) {
     await playlist.resetAll();
     setPlaying(false);
 
@@ -408,6 +425,23 @@ async function loadSongs(songs, addPlaying = true) {
     }
 
     setReady(true);
+
+    if (updateStored) {
+        updateStoredSongs();
+    }
+}
+
+async function loadStoredPlaylist(playingIndex, repeatMode) {
+    const storedPlaylist = await database.contains("songs");
+
+    if (storedPlaylist.has) {
+        loadImport(storedPlaylist.result, false, playingIndex, repeatMode);
+    }
+}
+
+async function updateStoredSongs() {
+    const zip = await playlist.save();
+    database.put("songs", zip);
 }
 
 /**
@@ -508,6 +542,8 @@ function setRepeat(repeat) {
             repeatButton.dataset.status = "playlist";
             break;
     }
+
+    database.put("repeatMode", repeat);
 }
 
 /**
