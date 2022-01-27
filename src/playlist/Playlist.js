@@ -1,5 +1,4 @@
 import "https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js";
-import "https://cdn.jsdelivr.net/gh/beatgammit/base64-js@1.5.1/base64js.min.js";
 import { decodeHTML, wait } from "../util/util.js";
 import Player from "../player/Player.js";
 import EventClass from "../util/EventClass.js";
@@ -237,36 +236,34 @@ export default class Playlist extends EventClass {
      * @return {Promise<void>}
      */
     async export() {
-        const result = {
-            "repeatMode": this.repeatMode,
-            "songs": []
+        const zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), {
+            "level": 9,
+            "extendedTimestamp": false
+        });
+
+        const data = {
+            "repeatMode": this.repeatMode
         };
 
         // Iterate each entry
-        const order = playlistOrder.children;
-        for (let i = 0; i < order.length; i++) {
-            const loadedPlayer = this.loadedPlayers.get(decodeHTML(order[i].innerHTML));
+        for (let i = 0; i < playlistOrder.children.length; i++) {
+            const entry = playlistOrder.children[i];
+            const loadedPlayer = this.loadedPlayers.get(decodeHTML(entry.innerHTML));
 
-            // Encode the song's ArrayBuffer to base64
-            const data = base64js.fromByteArray(new Uint8Array(loadedPlayer.arrayBuffer));
-            result.songs.push({
-                "filename": loadedPlayer.name,
-                data
-            });
+            await zipWriter.add(`songs/${loadedPlayer.name}`, new zip.Uint8ArrayReader(new Uint8Array(loadedPlayer.arrayBuffer)));
 
-            // Add the currently playing song
-            if (order[i].classList.contains("playing")) {
-                result.playing = i;
+            if (entry.classList.contains("playing")) {
+                data.playing = i;
             }
         }
 
+        await zipWriter.add("data", new zip.TextReader(JSON.stringify(data)));
+
         // Prepare the results for downloading
-        const json = JSON.stringify(result);
-        const blob = new Blob([json], { "type": "application/json" });
-        const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(await zipWriter.close());
 
         const link = document.createElement("a");
-        link.download = "playlist.json";
+        link.download = "playlist.zip";
         link.href = url;
 
         document.body.append(link);
@@ -277,28 +274,30 @@ export default class Playlist extends EventClass {
     /**
      * Import a playlist from a JSON file.
      *
-     * @param {Object} json JSON to import.
+     * @param {Object} blob Blob to import.
      * @return {Promise<{repeatMode: number, songs: {name: string, buffer: ArrayBuffer}[], playing: number}>}
      */
-    async import(json) {
-        const songs = [];
+    async import(blob) {
+        const blobReader = new zip.BlobReader(blob);
+        const zipReader = new zip.ZipReader(blobReader);
+        const entries = await zipReader.getEntries();
 
-        // Reverse and iterate each song
-        for (const song of json.songs.reverse()) {
-            // Decode the song's ArrayBuffer from base64
-            const data = base64js.toByteArray(song.data);
-            const buffer = await data.buffer;
-
-            songs.push({
-                "name": data.filename,
-                "buffer": buffer
-            });
+        const data = {
+            "files": []
+        };
+        for (const entry of entries) {
+            if (entry.filename === "data") {
+                const json = JSON.parse(await entry.getData(new zip.TextWriter()));
+                Object.assign(data, json);
+            } else if (entry.filename.startsWith("songs")) {
+                const binary = await entry.getData(new zip.Uint8ArrayWriter());
+                data.files.unshift({
+                    "name": entry.filename.replace(/^songs\//, ""),
+                    "buffer": binary.buffer
+                });
+            }
         }
 
-        return {
-            songs,
-            "playing": json.playing,
-            "repeatMode": json.repeatMode
-        };
+        return data;
     }
 }

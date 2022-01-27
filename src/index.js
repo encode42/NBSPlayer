@@ -223,8 +223,7 @@ window.addEventListener("load", async () => {
         }
 
         // Load the uploaded JSON file
-        const file = await importSelect.files[0].text();
-        loadImport(file);
+        loadImport(importSelect.files[0]);
     });
 
     // Playlist entry is clicked.
@@ -364,25 +363,26 @@ async function loadURL(link) {
  */
 async function fetchImport(link) {
     const result = await fetchURL(link);
-    const json = await result.text();
+    const blob = await result.blob();
 
-    loadImport(json);
+    loadImport(blob);
 }
 
 /**
  * Load an imported playlist file.
  *
- * @param {string} file File to load
+ * @param {string} blob Blob to load
  * @return {Promise<void>}
  */
-async function loadImport(file) {
-    const json = JSON.parse(file);
+async function loadImport(blob) {
+    //const json = JSON.parse(file);
 
     // Load the playlist and songs
-    const result = await playlist.import(json);
+    const result = await playlist.import(blob);
+
     setRepeat(result.repeatMode);
 
-    await loadSongs(result.songs, false);
+    await loadSongs(result.files, false);
     const name = playlistOrder.children[result.playing].innerHTML;
     playlist.switchTo(name);
 }

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <meta charset="UTF-8">
+        <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title>NBSPlayer</title>
@@ -18,7 +18,7 @@
                     <a href="#" id="select-toggle" class="fancy-link"></a>
                     <div>
                         <a href="#" id="export" class="fancy-link">export</a> <a href="#" id="import" class="fancy-link"></a>
-                        <input type="file" id="import-select" accept="application/json">
+                        <input type="file" id="import-select" accept="application/zip">
                     </div>
                 </section>
                 <div class="input-with-button">
@@ -52,6 +52,7 @@
         </footer>
 
         <script src="https://cdn.jsdelivr.net/npm/@uriopass/nosleep.js@0.12.1/dist/NoSleep.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.3.24/dist/zip.min.js"></script>
         <script async src="./src/index.js" type="module"></script>
     </body>
 </html>
