@@ -1,5 +1,7 @@
+//import { setInstrumentClass, fromArrayBuffer } from "../esm.js"; // Uncomment for testing
+import { setInstrumentClass, fromArrayBuffer } from "https://cdn.jsdelivr.net/npm/@encode42/nbs.js@2.0.1/dist/esm.min.js";
 import PlayerInstrument from "../player/PlayerInstrument.js";
-NBSjs.setInstrumentClass(PlayerInstrument);
+setInstrumentClass(PlayerInstrument);
 
 let initialized = false;
 
@@ -25,15 +27,17 @@ export async function init() {
  */
 export async function load(arraybuffer) {
     // Load the song
-    const song = NBSjs.Song.fromArrayBuffer(arraybuffer);
+    const song = fromArrayBuffer(arraybuffer);
 
     // Correct built-in custom instruments
-    for (const instrument of song.instruments) {
+    /* TODO - Better way to deal with CIs
+    for (const instrument of song.instruments.loaded) {
         if (!instrument.builtIn) {
             // Get the custom instrument from the built-in array
             instrument.audioBuffer = PlayerInstrument.getCustom(instrument.audioSrc)?.audioBuffer;
         }
     }
+     */
 
     return song;
 }

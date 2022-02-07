@@ -6,7 +6,7 @@ audioDestination.connect(audioContext.destination);
  * Play a note.
  *
  * @param {number} key Key to play at
- * @param {PlayerInstrument} instrument Instrument to play
+ * @param {Instrument} instrument Instrument to play
  * @param {number} velocity Velocity (volume) to play at
  * @param {number} panning Panning to play at
  * @param {number} pitch Pitch to play at

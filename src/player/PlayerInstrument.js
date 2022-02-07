@@ -1,11 +1,11 @@
-// import "../NBS.js"; // Uncomment for testing
-import "https://cdn.jsdelivr.net/npm/@encode42/nbs.js/dist/index.js";
+//import { Instrument } from "../NBS.js"; // Uncomment for testing
+import { Instrument } from "https://cdn.jsdelivr.net/npm/@encode42/nbs.js@2.0.1/dist/esm.min.js";
 import { decodeAudioData } from "../audio/audio.js";
 
 /**
  * Represents an instrument of a Note.
  */
-export default class PlayerInstrument extends NBSjs.Instrument {
+export default class PlayerInstrument extends Instrument {
     /**
      * The resulting audio buffer that will contain the sound
      * Set by loadAudio() or load()

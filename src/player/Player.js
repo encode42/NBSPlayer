@@ -156,22 +156,29 @@ export default class Player extends EventClass {
     arrayBuffer;
 
     /**
+     * The song's instruments.
+     *
+     * @type {Instrument[]}
+     */
+    instruments;
+
+    /**
      * Create a Note Block player.
      *
-     * @param {NBSjs.Song} song Song to play
+     * @param {Song} song Song to play
      */
     constructor(song) {
         super();
 
         // Load the player
-        this.hasSolo = song.hasSolo;
+        this.hasSolo = song.meta.hasSolo;
         this.timePerTick = song.timePerTick;
-        this.lastTick = song.size;
+        this.lastTick = song.length;
 
         // Process song loop status
-        this.loop = song.loopEnabled;
-        this.maxLoopCount = song.maxLoopCount;
-        this.loopStartTick = song.loopStartTick;
+        this.loop = song.loop.enabled;
+        this.maxLoopCount = song.loop.totalLoops;
+        this.loopStartTick = song.loop.startTick;
 
         // Process all layers that will be played back
         // This creates an object containing all solo or non-locked layers
@@ -180,18 +187,20 @@ export default class Player extends EventClass {
             const layer = song.layers[currentLayer];
 
             // Skip non-solo layers
-            if (this.hasSolo && !layer.solo) {
+            if (this.hasSolo && !layer.isSolo) {
                 continue;
             }
 
             // Skip locked layers
-            if (layer.locked) {
+            if (layer.isLocked) {
                 continue;
             }
 
             this.layers[this.audibleLayers] = layer;
             this.audibleLayers++;
         }
+
+        this.instruments = song.instruments.loaded;
     }
 
     /**
@@ -254,6 +263,7 @@ export default class Player extends EventClass {
         // Iterate each layer
         for (let currentLayer = 0; currentLayer < this.audibleLayers; currentLayer++) {
             const layer = this.layers[currentLayer];
+
             const note = layer.notes[this.currentTick];
 
             // Ensure a note is on the tick then play
@@ -261,17 +271,17 @@ export default class Player extends EventClass {
                 // Parity changes:
                 // - Alternate panning algorithm
                 // - Detune note pitch
-                let panning = (note.panning + layer.panning) / 2;
+                let panning = (note.panning + layer.stereo) / 2;
                 let pitch = note.pitch;
                 if (this.useParity) {
-                    panning = layer.panning === 0 ? note.panning : panning;
+                    panning = layer.stereo === 0 ? note.panning : panning;
                     pitch = note.pitch - 2;
                 }
 
                 playNote(
                     note.key,
-                    note.instrument,
-                    (note.velocity * layer.velocity) / 100,
+                    this.instruments[note.instrument],
+                    (note.velocity * layer.volume) / 100,
                     panning,
                     pitch
                 );
