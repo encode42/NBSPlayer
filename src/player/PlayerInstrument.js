@@ -1,5 +1,5 @@
 //import { Instrument } from "../NBS.js"; // Uncomment for testing
-import { Instrument } from "https://cdn.jsdelivr.net/npm/@encode42/nbs.js@2.0.1/dist/esm.min.js";
+import { Instrument } from "https://cdn.jsdelivr.net/npm/@encode42/nbs.js@2.0.2/dist/esm.min.js";
 import { decodeAudioData } from "../audio/audio.js";
 
 /**
